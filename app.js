@@ -1,5 +1,6 @@
 const STORAGE_KEY = "nexus-admin-data-v1";
 const SESSION_KEY = "nexus-admin-session-v1";
+const THEME_KEY = "nexus-admin-theme-v1";
 const VALID_USER = "admin";
 const VALID_PASS = "nexus2026";
 
@@ -34,6 +35,7 @@ const loginForm = document.getElementById("loginForm");
 const loginError = document.getElementById("loginError");
 const logoutBtn = document.getElementById("logoutBtn");
 const installBtn = document.getElementById("installBtn");
+const themeToggleButtons = Array.from(document.querySelectorAll("[data-theme-toggle]"));
 
 const totalIncomeEl = document.getElementById("totalIncome");
 const totalExpensesEl = document.getElementById("totalExpenses");
@@ -58,6 +60,29 @@ const quoteNotes = document.getElementById("quoteNotes");
 const docPreview = document.getElementById("docPreview");
 const generateDocBtn = document.getElementById("generateDocBtn");
 const printBtn = document.getElementById("printBtn");
+
+function getInitialTheme() {
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  if (savedTheme === "dark" || savedTheme === "light") return savedTheme;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function updateThemeToggleLabels(theme) {
+  const nextThemeLabel = theme === "dark" ? "Modo claro" : "Modo oscuro";
+  themeToggleButtons.forEach((button) => {
+    button.textContent = nextThemeLabel;
+  });
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem(THEME_KEY, theme);
+  updateThemeToggleLabels(theme);
+
+  const themeColor = theme === "dark" ? "#0b0f17" : "#f2f5ff";
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) themeMeta.setAttribute("content", themeColor);
+}
 
 function loadData() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -304,6 +329,7 @@ function generateDoc() {
   const phaseThree = totalFinal * 0.2;
 
   const serviceNames = selectedServices.map((service) => escapeHtml(service.name)).join(", ");
+  const websiteUrl = "https://www.nexusglobalsuministros.com/";
   const extraContractClauses = isContract
     ? `
       <section class="doc-section">
@@ -327,6 +353,29 @@ function generateDoc() {
           una adenda con costo y plazo ajustado.
         </p>
       </section>
+      <section class="doc-section">
+        <h5>8. Suspensión, terminación y reactivación</h5>
+        <p>
+          Si el proyecto se pausa por más de 20 días calendario por causas ajenas a Nexus Global (falta de insumos,
+          accesos o aprobaciones), se podrá reprogramar la fecha de entrega y aplicar una tarifa de reactivación
+          operativa según el estado del proyecto.
+        </p>
+      </section>
+      <section class="doc-section">
+        <h5>9. Limitación de responsabilidad</h5>
+        <p>
+          Nexus Global responde por la correcta ejecución técnica del alcance contratado, pero no garantiza resultados
+          comerciales específicos, ya que estos dependen de factores externos como mercado, inversión publicitaria,
+          operación del cliente y comportamiento de usuarios finales.
+        </p>
+      </section>
+      <section class="doc-section">
+        <h5>10. Jurisdicción aplicable</h5>
+        <p>
+          Para cualquier controversia derivada del presente contrato, las partes acuerdan resolver de buena fe y, de no
+          llegar a acuerdo, someterse a la jurisdicción competente del domicilio comercial de Nexus Global.
+        </p>
+      </section>
     `
     : `
       <section class="doc-section">
@@ -334,6 +383,20 @@ function generateDoc() {
         <p>
           Esta cotización tiene vigencia hasta el ${validUntil.toLocaleDateString("es-HN")}. Después de esta fecha,
           precios y tiempos pueden variar según disponibilidad y alcance actualizado.
+        </p>
+      </section>
+      <section class="doc-section">
+        <h5>6. Alcance referencial de la propuesta</h5>
+        <p>
+          Esta cotización describe un alcance funcional base. El documento final de contratación detallará entregables,
+          dependencias, cronograma definitivo y condiciones de soporte según el análisis técnico completo.
+        </p>
+      </section>
+      <section class="doc-section">
+        <h5>7. Exclusiones comunes</h5>
+        <p>
+          No se incluyen costos de terceros (dominios, hosting, APIs pagas, pasarelas de pago, licencias premium o
+          inversión en pauta publicitaria) salvo que se especifique expresamente en esta propuesta.
         </p>
       </section>
     `;
@@ -352,11 +415,26 @@ function generateDoc() {
       El presente documento resume alcance, inversión y condiciones generales del servicio en ${finalCurrency}.
     </p>
     <section class="doc-section">
+      <h5>Datos del proveedor</h5>
+      <p>
+        <strong>Nexus Global</strong><br />
+        Sitio web: <a href="${websiteUrl}" target="_blank" rel="noopener noreferrer">${websiteUrl}</a><br />
+        Servicios digitales: desarrollo web, plataformas personalizadas, automatización y soluciones empresariales.
+      </p>
+    </section>
+    <section class="doc-section">
       <h5>1. Resumen ejecutivo</h5>
       <p>
         Se propone desarrollar e implementar los siguientes servicios: ${serviceNames}. El objetivo principal es
         mejorar la presencia digital, optimizar procesos internos y habilitar herramientas tecnológicas orientadas a
         resultados medibles para el cliente.
+      </p>
+    </section>
+    <section class="doc-section">
+      <h5>Objetivo de negocio</h5>
+      <p>
+        La solución propuesta busca fortalecer la operación digital del cliente, aumentar eficiencia en procesos clave y
+        habilitar toma de decisiones basada en información, priorizando calidad técnica, escalabilidad y facilidad de uso.
       </p>
     </section>
     <table class="doc-table">
@@ -383,6 +461,7 @@ function generateDoc() {
         <li>Diseño y configuración técnica de la solución seleccionada.</li>
         <li>Desarrollo, pruebas funcionales y ajustes de calidad.</li>
         <li>Capacitación básica y acompañamiento de salida a producción.</li>
+        <li>Entrega de accesos, documentación operativa breve y handoff final.</li>
       </ul>
     </section>
     <section class="doc-section">
@@ -393,17 +472,41 @@ function generateDoc() {
       </p>
     </section>
     <section class="doc-section">
-      <h5>4. Condiciones comerciales</h5>
+      <h5>4.1 Responsabilidades del cliente</h5>
+      <ul>
+        <li>Entregar contenido, credenciales y materiales de marca en tiempo oportuno.</li>
+        <li>Designar un punto de contacto para validaciones y aprobaciones.</li>
+        <li>Revisar avances y brindar retroalimentación en los tiempos acordados.</li>
+      </ul>
+    </section>
+    <section class="doc-section">
+      <h5>5. Condiciones comerciales</h5>
       <ul>
         <li>Pago inicial: ${formatMoney(phaseOne, finalCurrency)} (50%) para iniciar el proyecto.</li>
         <li>Segundo pago: ${formatMoney(phaseTwo, finalCurrency)} (30%) al completar avance funcional principal.</li>
         <li>Pago final: ${formatMoney(phaseThree, finalCurrency)} (20%) al cierre y entrega.</li>
         <li>Soporte post-lanzamiento: 15 días para correcciones de alcance original.</li>
+        <li>Cambios fuera de alcance se cotizan por separado y requieren aprobación previa.</li>
       </ul>
+    </section>
+    <section class="doc-section">
+      <h5>6. Garantías y soporte</h5>
+      <p>
+        Nexus Global garantiza corrección de defectos atribuibles al desarrollo entregado durante el periodo de soporte.
+        Solicitudes de nuevas funcionalidades, integraciones adicionales o rediseños se gestionarán como mejoras
+        evolutivas mediante una propuesta complementaria.
+      </p>
+    </section>
+    <section class="doc-section">
+      <h5>${isContract ? "11" : "8"}. Canales de atención</h5>
+      <p>
+        Para seguimiento de proyecto, coordinación operativa y soporte, el cliente podrá comunicarse con Nexus Global
+        mediante los canales oficiales definidos al inicio del servicio, incluyendo el sitio web corporativo.
+      </p>
     </section>
     ${extraContractClauses}
     <section class="doc-section">
-      <h5>${isContract ? "8" : "6"}. Aceptación</h5>
+      <h5>${isContract ? "12" : "9"}. Aceptación</h5>
       <p>
         Al firmar este documento, ambas partes aceptan las condiciones, montos y tiempos aquí establecidos para la
         ejecución del servicio.
@@ -438,6 +541,7 @@ function printDocument() {
           .doc-section h5 { margin: 0 0 6px; font-size: 15px; }
           .doc-section p { margin: 0; line-height: 1.45; }
           .doc-section ul { margin: 6px 0 0; padding-left: 20px; }
+          .doc-section a { color: #2f5ae0; text-decoration: none; }
           .doc-table { width: 100%; border-collapse: collapse; margin-top: 16px; margin-bottom: 16px; }
           .doc-table th, .doc-table td { border: 1px solid #dadde5; padding: 8px; text-align: left; }
           .signatures { display: flex; justify-content: space-between; margin-top: 40px; }
@@ -480,6 +584,14 @@ function showAuth() {
   adminShell.classList.add("hidden");
   authShell.classList.remove("hidden");
 }
+
+themeToggleButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+    const nextTheme = currentTheme === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+  });
+});
 
 loginForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -561,6 +673,8 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
+
+applyTheme(getInitialTheme());
 
 if (localStorage.getItem(SESSION_KEY) === "1") {
   showAdmin();

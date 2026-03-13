@@ -1,5 +1,6 @@
 :root {
   --bg: #090b10;
+  --bg-accent: #1a2240;
   --card: #111522;
   --card-2: #171d2e;
   --text: #eef2ff;
@@ -8,6 +9,27 @@
   --danger: #ff6467;
   --ok: #40d38a;
   --line: #2b3248;
+  --input-bg: #0d1220;
+  --chip-bg: #0f1524;
+  --preview-bg: #0b111d;
+  --subtle-strong: #d4ddf8;
+}
+
+:root[data-theme="light"] {
+  --bg: #eef3ff;
+  --bg-accent: #ffffff;
+  --card: #f8faff;
+  --card-2: #f0f4ff;
+  --text: #121826;
+  --muted: #5d6b87;
+  --brand: #435ed9;
+  --danger: #c33f54;
+  --ok: #18884f;
+  --line: #cfd8ef;
+  --input-bg: #ffffff;
+  --chip-bg: #edf2ff;
+  --preview-bg: #f3f7ff;
+  --subtle-strong: #2f3f67;
 }
 
 * {
@@ -17,8 +39,9 @@
 body {
   margin: 0;
   font-family: Inter, Segoe UI, Arial, sans-serif;
-  background: radial-gradient(circle at 20% 10%, #1a2240, var(--bg) 40%);
+  background: radial-gradient(circle at 20% 10%, var(--bg-accent), var(--bg) 40%);
   color: var(--text);
+  touch-action: manipulation;
 }
 
 .hidden {
@@ -44,6 +67,12 @@ body {
   padding: 28px 24px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
   text-align: center;
+}
+
+.auth-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
 }
 
 .logo-mark {
@@ -106,7 +135,7 @@ button {
 
 input,
 select {
-  background: #0d1220;
+  background: var(--input-bg);
   color: var(--text);
 }
 
@@ -148,12 +177,7 @@ button:hover {
 }
 
 .top-logo {
-  width: 50px;
-}
-
-.top-text-logo {
-  width: 150px;
-  display: block;
+  width: 52px;
 }
 
 .actions {
@@ -259,7 +283,7 @@ th {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #0f1524;
+  background: var(--chip-bg);
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 8px;
@@ -267,7 +291,7 @@ th {
 
 .service-chip span {
   flex: 1;
-  color: #d4ddf8;
+  color: var(--subtle-strong);
 }
 
 .qty-input {
@@ -276,7 +300,7 @@ th {
 
 .preview {
   margin-top: 12px;
-  background: #0b111d;
+  background: var(--preview-bg);
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 14px;
@@ -357,6 +381,24 @@ th {
 }
 
 @media (max-width: 680px) {
+  .auth-shell,
+  .app-shell {
+    padding: 12px;
+  }
+
+  .auth-card {
+    padding: 20px 14px;
+    border-radius: 16px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
   .inline-form,
   .service-form,
   .quote-form {
@@ -370,5 +412,24 @@ th {
   .topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+
+  .service-chip {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .qty-input {
+    width: 100%;
   }
 }
