@@ -328,6 +328,19 @@ function generateDoc() {
   const phaseOne = totalFinal * 0.5;
   const phaseTwo = totalFinal * 0.3;
   const phaseThree = totalFinal * 0.2;
+  const paymentTerms = isContract
+    ? `
+      <li>Pago unico: ${formatMoney(totalFinal, finalCurrency)} (100%) al aprobar este contrato e iniciar ejecucion.</li>
+      <li>La emision de factura/recibo se realiza conforme a la normativa fiscal aplicable.</li>
+      <li>Cualquier servicio adicional no contemplado se cotiza por separado y requiere aprobacion previa.</li>
+    `
+    : `
+      <li>Pago inicial: ${formatMoney(phaseOne, finalCurrency)} (50%) para iniciar el proyecto.</li>
+      <li>Segundo pago: ${formatMoney(phaseTwo, finalCurrency)} (30%) al completar avance funcional principal.</li>
+      <li>Pago final: ${formatMoney(phaseThree, finalCurrency)} (20%) al cierre y entrega.</li>
+      <li>Soporte post-lanzamiento: 15 dias para correcciones de alcance original.</li>
+      <li>Cambios fuera de alcance se cotizan por separado y requieren aprobacion previa.</li>
+    `;
 
   const serviceNames = selectedServices.map((service) => escapeHtml(service.name)).join(", ");
   const websiteUrl = "https://www.nexusglobalsuministros.com/";
@@ -483,11 +496,7 @@ function generateDoc() {
     <section class="doc-section">
       <h5>5. Condiciones comerciales</h5>
       <ul>
-        <li>Pago inicial: ${formatMoney(phaseOne, finalCurrency)} (50%) para iniciar el proyecto.</li>
-        <li>Segundo pago: ${formatMoney(phaseTwo, finalCurrency)} (30%) al completar avance funcional principal.</li>
-        <li>Pago final: ${formatMoney(phaseThree, finalCurrency)} (20%) al cierre y entrega.</li>
-        <li>Soporte post-lanzamiento: 15 días para correcciones de alcance original.</li>
-        <li>Cambios fuera de alcance se cotizan por separado y requieren aprobación previa.</li>
+        ${paymentTerms}
       </ul>
     </section>
     <section class="doc-section">
@@ -675,9 +684,12 @@ installBtn.addEventListener("click", async () => {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(() => {
-      // Silently ignore registration errors for local testing edge cases.
-    });
+    navigator.serviceWorker
+      .register("./sw.js", { updateViaCache: "none" })
+      .then((registration) => registration.update())
+      .catch(() => {
+        // Silently ignore registration errors for local testing edge cases.
+      });
   });
 }
 
