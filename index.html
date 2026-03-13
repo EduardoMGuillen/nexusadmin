@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0f17" />
+    <meta
+      name="description"
+      content="Nexus Admin PWA para gestionar clientes, servicios, ingresos y cotizaciones."
+    />
+    <title>Nexus Admin PWA</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="./NexusGPTHD.png" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <main class="auth-shell" id="authShell">
+        <section class="auth-card">
+          <img class="logo-mark" src="./NexusGPTHD.png" alt="Nexus Logo" />
+          <img class="logo-text" src="./nexustexto.png" alt="Nexus Global" />
+          <h1>Nexus Admin</h1>
+          <p class="subtle">Ingresa para administrar tu empresa.</p>
+          <form id="loginForm" class="stack-form">
+            <label>
+              Usuario
+              <input id="username" type="text" placeholder="admin" required />
+            </label>
+            <label>
+              Contraseña
+              <input
+                id="password"
+                type="password"
+                placeholder="nexus2026"
+                required
+              />
+            </label>
+            <button type="submit">Entrar</button>
+            <p class="hint">Acceso inicial: admin / nexus2026</p>
+            <p class="error" id="loginError" aria-live="polite"></p>
+          </form>
+        </section>
+      </main>
+
+      <main class="app-shell hidden" id="adminShell">
+        <header class="topbar">
+          <div class="brand">
+            <img class="top-logo" src="./NexusGPTHD.png" alt="Nexus icono" />
+            <div>
+              <img class="top-text-logo" src="./nexustexto.png" alt="Nexus" />
+              <p class="subtle">Panel empresarial PWA</p>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="installBtn" class="ghost hidden">Instalar App</button>
+            <button id="logoutBtn" class="ghost danger">Cerrar sesión</button>
+          </div>
+        </header>
+
+        <section class="kpi-grid">
+          <article class="card">
+            <h2>Ingresos Totales</h2>
+            <p class="kpi" id="totalIncome">$0.00</p>
+            <small>USD (suma de clientes)</small>
+          </article>
+          <article class="card">
+            <h2>Gastos Totales</h2>
+            <p class="kpi" id="totalExpenses">$0.00</p>
+            <small>USD (gastos de empresa)</small>
+          </article>
+          <article class="card">
+            <h2>Ganancia Actual</h2>
+            <p class="kpi" id="totalProfit">$0.00</p>
+            <small>USD (ingresos - gastos)</small>
+          </article>
+          <article class="card">
+            <h2>Servicios activos</h2>
+            <p class="kpi" id="serviceCount">0</p>
+            <small>Catálogo de ofertas Nexus</small>
+          </article>
+        </section>
+
+        <section class="grid-two">
+          <article class="card">
+            <h3>Clientes e ingresos</h3>
+            <form id="clientForm" class="inline-form">
+              <input id="clientName" type="text" placeholder="Nombre cliente" required />
+              <input
+                id="clientIncome"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Ingreso USD"
+                required
+              />
+              <button type="submit">Agregar</button>
+            </form>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Ingreso (USD)</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="clientsTable"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="card">
+            <h3>Gastos de empresa</h3>
+            <form id="expenseForm" class="inline-form">
+              <input id="expenseName" type="text" placeholder="Concepto" required />
+              <input
+                id="expenseAmount"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Monto USD"
+                required
+              />
+              <button type="submit">Agregar</button>
+            </form>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Gasto</th>
+                    <th>Monto (USD)</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="expensesTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="card">
+          <h3>Servicios Nexus</h3>
+          <form id="serviceForm" class="inline-form service-form">
+            <input id="serviceName" type="text" placeholder='Ej: MiVisita, PaginaWeb' required />
+            <input id="servicePrice" type="number" min="0" step="0.01" placeholder="Costo" required />
+            <select id="serviceCurrency">
+              <option value="USD">USD</option>
+              <option value="HNL">HNL</option>
+              <option value="EUR">EUR</option>
+            </select>
+            <button type="submit">Agregar servicio</button>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Servicio</th>
+                  <th>Costo</th>
+                  <th>Moneda</th>
+                  <th>Equivalente USD</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="servicesTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Cotización / Contrato automático</h3>
+          <form id="quoteForm" class="quote-form">
+            <div class="field">
+              <label for="quoteType">Tipo de documento</label>
+              <select id="quoteType">
+                <option value="Cotización">Cotización</option>
+                <option value="Contrato">Contrato</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="quoteClient">Cliente</label>
+              <select id="quoteClient"></select>
+            </div>
+            <div class="field">
+              <label for="quoteCurrency">Moneda final</label>
+              <select id="quoteCurrency">
+                <option value="USD">USD</option>
+                <option value="HNL">HNL</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+            <div class="field field-grow">
+              <label for="quoteNotes">Notas</label>
+              <input id="quoteNotes" type="text" placeholder="Alcance, tiempos, observaciones..." />
+            </div>
+            <button type="button" id="generateDocBtn">Generar documento</button>
+          </form>
+
+          <p class="subtle">Selecciona servicios para incluir:</p>
+          <div id="serviceSelector" class="service-selector"></div>
+
+          <article id="docPreview" class="preview">
+            <p class="subtle">Aquí se mostrará tu cotización/contrato.</p>
+          </article>
+          <div class="preview-actions">
+            <button id="printBtn" class="ghost">Imprimir / Guardar PDF</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

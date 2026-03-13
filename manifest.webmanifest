@@ -1,0 +1,17 @@
+{
+  "name": "Nexus Admin PWA",
+  "short_name": "NexusAdmin",
+  "description": "Gestión de clientes, servicios, ingresos, gastos y cotizaciones para Nexus.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#090b10",
+  "theme_color": "#0b0f17",
+  "icons": [
+    {
+      "src": "./NexusGPTHD.png",
+      "type": "image/png",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ]
+}
