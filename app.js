@@ -35,6 +35,7 @@ const loginForm = document.getElementById("loginForm");
 const loginError = document.getElementById("loginError");
 const logoutBtn = document.getElementById("logoutBtn");
 const installBtn = document.getElementById("installBtn");
+const refreshBtn = document.getElementById("refreshBtn");
 const themeToggleButtons = Array.from(document.querySelectorAll("[data-theme-toggle]"));
 
 const totalIncomeEl = document.getElementById("totalIncome");
@@ -610,6 +611,12 @@ logoutBtn.addEventListener("click", () => {
   localStorage.removeItem(SESSION_KEY);
   showAuth();
 });
+
+if (refreshBtn) {
+  refreshBtn.addEventListener("click", () => {
+    window.location.reload();
+  });
+}
 
 clientForm.addEventListener("submit", (event) => {
   event.preventDefault();
