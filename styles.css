@@ -41,14 +41,15 @@ body {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 20px;
-  padding: 24px;
+  padding: 28px 24px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  text-align: center;
 }
 
 .logo-mark {
   display: block;
-  width: 90px;
-  margin: 0 auto 10px;
+  width: 112px;
+  margin: 0 auto 12px;
 }
 
 .logo-text {
@@ -72,6 +73,19 @@ h4 {
 .stack-form {
   display: grid;
   gap: 12px;
+}
+
+.auth-card .stack-form {
+  margin-top: 6px;
+}
+
+.auth-card label {
+  text-align: left;
+}
+
+.auth-card .hint,
+.auth-card .error {
+  text-align: center;
 }
 
 label {
@@ -290,6 +304,28 @@ th {
 .doc-table td {
   border: 1px solid #293048;
   padding: 6px;
+}
+
+.doc-section {
+  margin-top: 10px;
+}
+
+.doc-section h5 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: #c9d6ff;
+}
+
+.doc-section p {
+  margin: 0;
+  color: #dce5ff;
+  line-height: 1.45;
+}
+
+.doc-section ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: #dce5ff;
 }
 
 .signatures {

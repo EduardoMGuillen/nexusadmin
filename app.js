@@ -293,20 +293,72 @@ function generateDoc() {
 
   const totalFinal = fromUSD(totalUSD, finalCurrency);
   const notes = quoteNotes.value.trim();
+  const docType = quoteType.value;
+  const isContract = docType === "Contrato";
+  const introLabel = isContract ? "contrato" : "cotización";
+  const validUntil = new Date(today);
+  validUntil.setDate(validUntil.getDate() + 15);
+
+  const phaseOne = totalFinal * 0.5;
+  const phaseTwo = totalFinal * 0.3;
+  const phaseThree = totalFinal * 0.2;
+
+  const serviceNames = selectedServices.map((service) => escapeHtml(service.name)).join(", ");
+  const extraContractClauses = isContract
+    ? `
+      <section class="doc-section">
+        <h5>5. Propiedad intelectual y licencias</h5>
+        <p>
+          El código, diseño y activos creados para el cliente se entregarán con licencia de uso comercial una vez
+          completado el pago total. Nexus Global podrá reutilizar componentes genéricos no exclusivos.
+        </p>
+      </section>
+      <section class="doc-section">
+        <h5>6. Confidencialidad y datos</h5>
+        <p>
+          Ambas partes acuerdan mantener confidencial la información técnica, comercial y operativa compartida durante
+          la ejecución del proyecto.
+        </p>
+      </section>
+      <section class="doc-section">
+        <h5>7. Cambios de alcance</h5>
+        <p>
+          Cualquier requerimiento no contemplado en esta propuesta se tratará como adicional y se formalizará mediante
+          una adenda con costo y plazo ajustado.
+        </p>
+      </section>
+    `
+    : `
+      <section class="doc-section">
+        <h5>5. Vigencia de la cotización</h5>
+        <p>
+          Esta cotización tiene vigencia hasta el ${validUntil.toLocaleDateString("es-HN")}. Después de esta fecha,
+          precios y tiempos pueden variar según disponibilidad y alcance actualizado.
+        </p>
+      </section>
+    `;
 
   currentDocHTML = `
     <div class="doc-head">
       <img src="./nexustexto.png" alt="Nexus" class="doc-logo" />
       <div>
-        <h4>${quoteType.value} - ${docId}</h4>
+        <h4>${docType} - ${docId}</h4>
         <p>Fecha: ${formattedDate}</p>
         <p>Cliente: ${escapeHtml(selectedClient.name)}</p>
       </div>
     </div>
     <p>
-      Nexus Global presenta esta ${quoteType.value.toLowerCase()} para la prestación de servicios digitales.
-      Todos los valores están expresados en ${finalCurrency}.
+      Nexus Global presenta esta ${introLabel} para la prestación de servicios digitales.
+      El presente documento resume alcance, inversión y condiciones generales del servicio en ${finalCurrency}.
     </p>
+    <section class="doc-section">
+      <h5>1. Resumen ejecutivo</h5>
+      <p>
+        Se propone desarrollar e implementar los siguientes servicios: ${serviceNames}. El objetivo principal es
+        mejorar la presencia digital, optimizar procesos internos y habilitar herramientas tecnológicas orientadas a
+        resultados medibles para el cliente.
+      </p>
+    </section>
     <table class="doc-table">
       <thead>
         <tr>
@@ -324,10 +376,42 @@ function generateDoc() {
         </tr>
       </tfoot>
     </table>
-    <p><strong>Términos base:</strong> 50% inicial, 50% contra entrega final. Soporte post-lanzamiento incluido según alcance acordado.</p>
+    <section class="doc-section">
+      <h5>2. Alcance y entregables</h5>
+      <ul>
+        <li>Levantamiento de requerimientos y definición funcional inicial.</li>
+        <li>Diseño y configuración técnica de la solución seleccionada.</li>
+        <li>Desarrollo, pruebas funcionales y ajustes de calidad.</li>
+        <li>Capacitación básica y acompañamiento de salida a producción.</li>
+      </ul>
+    </section>
+    <section class="doc-section">
+      <h5>3. Cronograma estimado</h5>
+      <p>
+        El plazo estimado del proyecto es de 2 a 6 semanas, sujeto a la complejidad de integraciones, tiempos de
+        aprobación del cliente y disponibilidad de insumos (marca, accesos, contenido y validaciones).
+      </p>
+    </section>
+    <section class="doc-section">
+      <h5>4. Condiciones comerciales</h5>
+      <ul>
+        <li>Pago inicial: ${formatMoney(phaseOne, finalCurrency)} (50%) para iniciar el proyecto.</li>
+        <li>Segundo pago: ${formatMoney(phaseTwo, finalCurrency)} (30%) al completar avance funcional principal.</li>
+        <li>Pago final: ${formatMoney(phaseThree, finalCurrency)} (20%) al cierre y entrega.</li>
+        <li>Soporte post-lanzamiento: 15 días para correcciones de alcance original.</li>
+      </ul>
+    </section>
+    ${extraContractClauses}
+    <section class="doc-section">
+      <h5>${isContract ? "8" : "6"}. Aceptación</h5>
+      <p>
+        Al firmar este documento, ambas partes aceptan las condiciones, montos y tiempos aquí establecidos para la
+        ejecución del servicio.
+      </p>
+    </section>
     ${
       notes
-        ? `<p><strong>Notas:</strong> ${escapeHtml(notes)}</p>`
+        ? `<section class="doc-section"><h5>Notas adicionales</h5><p>${escapeHtml(notes)}</p></section>`
         : ""
     }
     <div class="signatures">
@@ -350,6 +434,10 @@ function printDocument() {
           body { font-family: Arial, sans-serif; padding: 30px; color: #16181d; }
           .doc-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
           .doc-logo { max-height: 54px; object-fit: contain; }
+          .doc-section { margin-top: 14px; }
+          .doc-section h5 { margin: 0 0 6px; font-size: 15px; }
+          .doc-section p { margin: 0; line-height: 1.45; }
+          .doc-section ul { margin: 6px 0 0; padding-left: 20px; }
           .doc-table { width: 100%; border-collapse: collapse; margin-top: 16px; margin-bottom: 16px; }
           .doc-table th, .doc-table td { border: 1px solid #dadde5; padding: 8px; text-align: left; }
           .signatures { display: flex; justify-content: space-between; margin-top: 40px; }
