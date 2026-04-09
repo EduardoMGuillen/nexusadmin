@@ -21,3 +21,24 @@ export function getSql() {
   }
   return global.__nexusSql__;
 }
+
+export async function ensureNexusSchema() {
+  const sql = getSql();
+  await sql`
+    create table if not exists nexus_records (
+      collection text not null,
+      id text not null,
+      payload jsonb not null,
+      updated_at timestamptz default now(),
+      primary key (collection, id)
+    )
+  `;
+  await sql`
+    create index if not exists idx_nexus_records_collection
+    on nexus_records (collection)
+  `;
+  await sql`
+    create index if not exists idx_nexus_records_updated_at
+    on nexus_records (updated_at desc)
+  `;
+}

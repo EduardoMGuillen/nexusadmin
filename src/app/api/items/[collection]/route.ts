@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSql } from "@/lib/neon";
+import { ensureNexusSchema, getSql } from "@/lib/neon";
 
 const VALID = new Set([
   "clients",
@@ -26,6 +26,7 @@ export async function POST(
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
 
+    await ensureNexusSchema();
     const sql = getSql();
     await sql`
       insert into nexus_records (collection, id, payload)
@@ -54,6 +55,7 @@ export async function DELETE(
     const { id } = (await request.json()) as { id: string };
     if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
 
+    await ensureNexusSchema();
     const sql = getSql();
     await sql`delete from nexus_records where collection = ${collection} and id = ${id}`;
     return NextResponse.json({ ok: true });

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSql } from "@/lib/neon";
+import { ensureNexusSchema, getSql } from "@/lib/neon";
 
 const COLLECTIONS = [
   "clients",
@@ -12,16 +12,8 @@ const COLLECTIONS = [
 
 export async function GET() {
   try {
+    await ensureNexusSchema();
     const sql = getSql();
-    await sql`
-      create table if not exists nexus_records (
-        collection text not null,
-        id text not null,
-        payload jsonb not null,
-        updated_at timestamptz default now(),
-        primary key (collection, id)
-      )
-    `;
 
     const rows = await sql<{
       collection: string;
