@@ -20,7 +20,7 @@ export async function GET() {
       payload: Record<string, unknown>;
     }[]>`
       select collection, payload
-      from nexus_records
+      from public.nexus_records
       where collection = any(${sql.array([...COLLECTIONS, "businessProfile"])})
       order by updated_at desc
     `;
@@ -51,7 +51,7 @@ export async function GET() {
 
     if (!grouped.businessProfile.length) {
       await sql`
-        insert into nexus_records (collection, id, payload)
+        insert into public.nexus_records (collection, id, payload)
         values ('businessProfile', 'main', ${JSON.stringify(businessProfile)}::jsonb)
         on conflict (collection, id) do update
         set payload = excluded.payload, updated_at = now()

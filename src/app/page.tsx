@@ -55,6 +55,10 @@ function toMonthLabel(monthKey: string) {
   return `${m}/${y}`;
 }
 
+function sanitizeMonthKey(value: string): string {
+  return /^\d{4}-\d{2}$/.test(value) ? value : getMonthKey();
+}
+
 export default function HomePage() {
   const [session, setSession] = useState(
     () => (typeof window !== "undefined" ? localStorage.getItem(SESSION_KEY) === "1" : false),
@@ -109,17 +113,18 @@ export default function HomePage() {
     serviceIds: [] as string[],
   });
 
+  const currentMonthKey = useMemo(() => sanitizeMonthKey(monthKey), [monthKey]);
   const monthIncome = useMemo(
-    () => state.incomeEntries.filter((item) => item.monthKey === monthKey),
-    [monthKey, state.incomeEntries],
+    () => state.incomeEntries.filter((item) => item.monthKey === currentMonthKey),
+    [currentMonthKey, state.incomeEntries],
   );
   const monthExpenses = useMemo(
-    () => state.expenseEntries.filter((item) => item.monthKey === monthKey),
-    [monthKey, state.expenseEntries],
+    () => state.expenseEntries.filter((item) => item.monthKey === currentMonthKey),
+    [currentMonthKey, state.expenseEntries],
   );
   const monthEmployeeCosts = useMemo(
-    () => state.employeeCosts.filter((item) => item.monthKey === monthKey),
-    [monthKey, state.employeeCosts],
+    () => state.employeeCosts.filter((item) => item.monthKey === currentMonthKey),
+    [currentMonthKey, state.employeeCosts],
   );
   const kpis = useMemo(
     () =>
@@ -127,9 +132,9 @@ export default function HomePage() {
         incomeEntries: state.incomeEntries,
         expenseEntries: state.expenseEntries,
         employeeCosts: state.employeeCosts,
-        monthKey,
+        monthKey: currentMonthKey,
       }),
-    [state.employeeCosts, state.expenseEntries, state.incomeEntries, monthKey],
+    [state.employeeCosts, state.expenseEntries, state.incomeEntries, currentMonthKey],
   );
 
   const monthlyTrend = useMemo(() => {
@@ -211,7 +216,7 @@ export default function HomePage() {
       id: crypto.randomUUID(),
       createdAt: nowISO(),
       updatedAt: nowISO(),
-      monthKey,
+      monthKey: currentMonthKey,
       ...incomeDraft,
       amount,
     };
@@ -228,7 +233,7 @@ export default function HomePage() {
       id: crypto.randomUUID(),
       createdAt: nowISO(),
       updatedAt: nowISO(),
-      monthKey,
+      monthKey: currentMonthKey,
       ...expenseDraft,
       amount,
     };
@@ -245,7 +250,7 @@ export default function HomePage() {
       id: crypto.randomUUID(),
       createdAt: nowISO(),
       updatedAt: nowISO(),
-      monthKey,
+      monthKey: currentMonthKey,
       ...employeeDraft,
       amount,
     };
@@ -288,7 +293,7 @@ export default function HomePage() {
       createdAt: nowISO(),
       updatedAt: nowISO(),
       type: docDraft.type,
-      monthKey,
+      monthKey: currentMonthKey,
       clientName: docDraft.clientName,
       currency: docDraft.currency,
       items,
@@ -320,7 +325,7 @@ export default function HomePage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `nexus-backup-${monthKey}.json`;
+    a.download = `nexus-backup-${currentMonthKey}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -382,7 +387,11 @@ export default function HomePage() {
           </div>
         </div>
         <div className="row">
-          <input value={monthKey} onChange={(e) => setMonthKey(e.target.value)} />
+          <input
+            type="month"
+            value={currentMonthKey}
+            onChange={(e) => setMonthKey(sanitizeMonthKey(e.target.value))}
+          />
           <button onClick={exportBackup} className="ghost" type="button">
             Exportar backup
           </button>
@@ -605,7 +614,7 @@ export default function HomePage() {
           <table>
             <thead><tr><th>Tipo</th><th>Cliente</th><th>Total</th><th>Acciones</th></tr></thead>
             <tbody>
-              {state.documents.filter((item) => item.monthKey === monthKey).map((item) => (
+              {state.documents.filter((item) => item.monthKey === currentMonthKey).map((item) => (
                 <tr key={item.id}>
                   <td>{item.type === "contract" ? "Contrato" : "Cotizacion"}</td>
                   <td>{item.clientName}</td>

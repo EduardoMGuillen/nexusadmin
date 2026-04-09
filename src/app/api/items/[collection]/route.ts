@@ -29,7 +29,7 @@ export async function POST(
     await ensureNexusSchema();
     const sql = getSql();
     await sql`
-      insert into nexus_records (collection, id, payload)
+      insert into public.nexus_records (collection, id, payload)
       values (${collection}, ${body.id}, ${JSON.stringify(body)}::jsonb)
       on conflict (collection, id) do update
       set payload = excluded.payload, updated_at = now()
@@ -57,7 +57,7 @@ export async function DELETE(
 
     await ensureNexusSchema();
     const sql = getSql();
-    await sql`delete from nexus_records where collection = ${collection} and id = ${id}`;
+    await sql`delete from public.nexus_records where collection = ${collection} and id = ${id}`;
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json(
