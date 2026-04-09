@@ -6,9 +6,15 @@ declare global {
 }
 
 export function getSql() {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString =
+    process.env.DATABASE_URL ??
+    process.env.POSTGRES_URL ??
+    process.env.POSTGRES_PRISMA_URL ??
+    process.env.NEON_DATABASE_URL;
   if (!connectionString) {
-    throw new Error("DATABASE_URL is required for Neon connection.");
+    throw new Error(
+      "Database URL missing. Set one of: DATABASE_URL, POSTGRES_URL, POSTGRES_PRISMA_URL, NEON_DATABASE_URL",
+    );
   }
 
   if (!global.__nexusSql__) {
