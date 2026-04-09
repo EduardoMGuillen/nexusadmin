@@ -28,9 +28,10 @@ export async function POST(
 
     await ensureNexusSchema();
     const sql = getSql();
+    const jsonPayload = body as unknown as never;
     await sql`
       insert into public.nexus_records (collection, id, payload)
-      values (${collection}, ${body.id}, ${JSON.stringify(body)}::jsonb)
+      values (${collection}, ${body.id}, ${sql.json(jsonPayload)})
       on conflict (collection, id) do update
       set payload = excluded.payload, updated_at = now()
     `;

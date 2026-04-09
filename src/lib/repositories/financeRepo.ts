@@ -25,6 +25,14 @@ function asArray<T>(value: unknown): T[] {
 }
 
 function asObject(value: unknown): Record<string, unknown> | null {
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (parsed && typeof parsed === "object") return parsed as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
 }
 

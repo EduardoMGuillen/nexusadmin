@@ -50,9 +50,10 @@ export async function GET() {
       } as const);
 
     if (!grouped.businessProfile.length) {
+      const profilePayload = businessProfile as unknown as never;
       await sql`
         insert into public.nexus_records (collection, id, payload)
-        values ('businessProfile', 'main', ${JSON.stringify(businessProfile)}::jsonb)
+        values ('businessProfile', 'main', ${sql.json(profilePayload)})
         on conflict (collection, id) do update
         set payload = excluded.payload, updated_at = now()
       `;
