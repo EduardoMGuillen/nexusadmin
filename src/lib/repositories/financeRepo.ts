@@ -142,12 +142,32 @@ const fallbackDefault: FallbackStore = {
   },
 };
 
+function sanitizeStore(data: Partial<FallbackStore>): FallbackStore {
+  return {
+    clients: asArray<Client>(data.clients).filter((c) => c && typeof c.id === "string"),
+    services: asArray(data.services).map(normalizeService).filter((x): x is Service => Boolean(x)),
+    incomeEntries: asArray(data.incomeEntries)
+      .map(normalizeIncomeEntry)
+      .filter((x): x is IncomeEntry => Boolean(x)),
+    expenseEntries: asArray(data.expenseEntries)
+      .map(normalizeExpenseEntry)
+      .filter((x): x is ExpenseEntry => Boolean(x)),
+    employeeCosts: asArray(data.employeeCosts)
+      .map(normalizeEmployeeCost)
+      .filter((x): x is EmployeeCost => Boolean(x)),
+    documents: asArray(data.documents)
+      .map(normalizeDocument)
+      .filter((x): x is BusinessDocument => Boolean(x)),
+    businessProfile: data.businessProfile ?? fallbackDefault.businessProfile,
+  };
+}
+
 function loadFallback(): FallbackStore {
   if (typeof window === "undefined") return fallbackDefault;
   const raw = localStorage.getItem(FALLBACK_KEY);
   if (!raw) return fallbackDefault;
   try {
-    return { ...fallbackDefault, ...JSON.parse(raw) };
+    return sanitizeStore({ ...fallbackDefault, ...JSON.parse(raw) } as Partial<FallbackStore>);
   } catch {
     return fallbackDefault;
   }
@@ -163,25 +183,9 @@ export async function getAllData() {
     const response = await fetch("/api/data", { cache: "no-store" });
     if (!response.ok) throw new Error("remote-failed");
     const data = (await response.json()) as Partial<FallbackStore>;
-    return {
-      clients: asArray<Client>(data.clients).filter((c) => c && typeof c.id === "string"),
-      services: asArray(data.services).map(normalizeService).filter((x): x is Service => Boolean(x)),
-      incomeEntries: asArray(data.incomeEntries)
-        .map(normalizeIncomeEntry)
-        .filter((x): x is IncomeEntry => Boolean(x)),
-      expenseEntries: asArray(data.expenseEntries)
-        .map(normalizeExpenseEntry)
-        .filter((x): x is ExpenseEntry => Boolean(x)),
-      employeeCosts: asArray(data.employeeCosts)
-        .map(normalizeEmployeeCost)
-        .filter((x): x is EmployeeCost => Boolean(x)),
-      documents: asArray(data.documents)
-        .map(normalizeDocument)
-        .filter((x): x is BusinessDocument => Boolean(x)),
-      businessProfile: data.businessProfile ?? fallbackDefault.businessProfile,
-    };
+    return sanitizeStore(data);
   } catch {
-    return loadFallback();
+    return sanitizeStore(loadFallback());
   }
 }
 
