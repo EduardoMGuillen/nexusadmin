@@ -20,6 +20,10 @@ interface FallbackStore {
   businessProfile: BusinessProfile;
 }
 
+function asArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
 const fallbackDefault: FallbackStore = {
   clients: [],
   services: [],
@@ -55,8 +59,16 @@ export async function getAllData() {
   try {
     const response = await fetch("/api/data", { cache: "no-store" });
     if (!response.ok) throw new Error("remote-failed");
-    const data = (await response.json()) as FallbackStore;
-    return data;
+    const data = (await response.json()) as Partial<FallbackStore>;
+    return {
+      clients: asArray<Client>(data.clients),
+      services: asArray<Service>(data.services),
+      incomeEntries: asArray<IncomeEntry>(data.incomeEntries),
+      expenseEntries: asArray<ExpenseEntry>(data.expenseEntries),
+      employeeCosts: asArray<EmployeeCost>(data.employeeCosts),
+      documents: asArray<BusinessDocument>(data.documents),
+      businessProfile: data.businessProfile ?? fallbackDefault.businessProfile,
+    };
   } catch {
     return loadFallback();
   }

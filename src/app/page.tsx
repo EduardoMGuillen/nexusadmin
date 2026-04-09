@@ -157,10 +157,15 @@ export default function HomePage() {
   }, [state.employeeCosts, state.expenseEntries, state.incomeEntries]);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
-    const data = await getAllData();
-    setState(data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const data = await getAllData();
+      setState(data);
+    } catch {
+      setState(defaultState);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -474,7 +479,7 @@ export default function HomePage() {
               {monthIncome.map((item) => (
                 <tr key={item.id}>
                   <td>{item.clientName}</td><td>{item.serviceName}</td><td>{formatMoney(item.amount, item.currency)}</td><td>{item.type}</td>
-                  <td><button className="ghost danger" onClick={() => void remove("incomeEntries", item.id)}>Eliminar</button></td>
+                  <td><button type="button" className="ghost danger" onClick={() => void remove("incomeEntries", item.id)}>Eliminar</button></td>
                 </tr>
               ))}
             </tbody>
@@ -506,7 +511,7 @@ export default function HomePage() {
               {monthExpenses.map((item) => (
                 <tr key={item.id}>
                   <td>{item.title}</td><td>{formatMoney(item.amount, item.currency)}</td><td>{item.type}</td>
-                  <td><button className="ghost danger" onClick={() => void remove("expenseEntries", item.id)}>Eliminar</button></td>
+                  <td><button type="button" className="ghost danger" onClick={() => void remove("expenseEntries", item.id)}>Eliminar</button></td>
                 </tr>
               ))}
             </tbody>
@@ -535,7 +540,7 @@ export default function HomePage() {
               {monthEmployeeCosts.map((item) => (
                 <tr key={item.id}>
                   <td>{item.collaborator}</td><td>{formatMoney(item.amount, item.currency)}</td><td>{item.costType}</td>
-                  <td><button className="ghost danger" onClick={() => void remove("employeeCosts", item.id)}>Eliminar</button></td>
+                  <td><button type="button" className="ghost danger" onClick={() => void remove("employeeCosts", item.id)}>Eliminar</button></td>
                 </tr>
               ))}
             </tbody>
@@ -563,7 +568,7 @@ export default function HomePage() {
               {state.services.map((item) => (
                 <tr key={item.id}>
                   <td>{item.name}</td><td>{formatMoney(item.basePrice, item.currency)}</td><td>{item.category}</td>
-                  <td><button className="ghost danger" onClick={() => void remove("services", item.id)}>Eliminar</button></td>
+                  <td><button type="button" className="ghost danger" onClick={() => void remove("services", item.id)}>Eliminar</button></td>
                 </tr>
               ))}
             </tbody>
@@ -606,8 +611,8 @@ export default function HomePage() {
                   <td>{item.clientName}</td>
                   <td>{formatMoney(item.total, item.currency)}</td>
                   <td className="row">
-                    <button className="ghost" onClick={() => exportDocumentPdf(item)}>PDF</button>
-                    <button className="ghost danger" onClick={() => void remove("documents", item.id)}>Eliminar</button>
+                    <button type="button" className="ghost" onClick={() => exportDocumentPdf(item)}>PDF</button>
+                    <button type="button" className="ghost danger" onClick={() => void remove("documents", item.id)}>Eliminar</button>
                   </td>
                 </tr>
               ))}
