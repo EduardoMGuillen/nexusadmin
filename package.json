@@ -1,0 +1,46 @@
+{
+  "name": "nexusadmin",
+  "version": "1.0.0",
+  "description": "Nexus WorkApp - financial operating tool for digital business",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EduardoMGuillen/nexusadmin.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EduardoMGuillen/nexusadmin/issues"
+  },
+  "homepage": "https://github.com/EduardoMGuillen/nexusadmin#readme",
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "firebase": "^12.11.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
+    "next": "^16.2.3",
+    "postgres": "^3.4.9",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "recharts": "^3.8.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.3",
+    "postcss": "^8.5.9",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.2"
+  }
+}

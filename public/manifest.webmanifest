@@ -1,0 +1,17 @@
+{
+  "name": "Nexus WorkApp",
+  "short_name": "Nexus",
+  "description": "Control de ingresos, gastos, empleados, reportes y documentos para Nexus.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1221",
+  "theme_color": "#0b1221",
+  "icons": [
+    {
+      "src": "/api/assets/NexusGPTHD.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
