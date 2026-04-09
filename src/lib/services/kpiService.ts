@@ -1,16 +1,20 @@
 import type { Currency, DashboardKpis, EmployeeCost, ExpenseEntry, IncomeEntry } from "@/lib/types";
 
-const ratesToUSD: Record<Currency, number> = {
+export type FxRates = Record<Currency, number>;
+
+export const DEFAULT_FX_RATES: FxRates = {
   USD: 1,
   HNL: 1 / 24.7,
   EUR: 1.08,
 };
 
-export function toUSD(amount: number, currency: Currency): number {
+export function toUSD(amount: number, currency: Currency, rates: FxRates = DEFAULT_FX_RATES): number {
+  const ratesToUSD = rates;
   return amount * ratesToUSD[currency];
 }
 
-export function fromUSD(amount: number, currency: Currency): number {
+export function fromUSD(amount: number, currency: Currency, rates: FxRates = DEFAULT_FX_RATES): number {
+  const ratesToUSD = rates;
   return amount / ratesToUSD[currency];
 }
 
@@ -23,11 +27,13 @@ export function getKpis({
   expenseEntries,
   employeeCosts,
   monthKey,
+  rates = DEFAULT_FX_RATES,
 }: {
   incomeEntries: IncomeEntry[];
   expenseEntries: ExpenseEntry[];
   employeeCosts: EmployeeCost[];
   monthKey: string;
+  rates?: FxRates;
 }): DashboardKpis {
   const monthIncome = incomeEntries.filter((item) => item.monthKey === monthKey && item.status === "paid");
   const monthExpenses = expenseEntries.filter((item) => item.monthKey === monthKey && item.status === "paid");
@@ -35,15 +41,18 @@ export function getKpis({
 
   const recurringIncomeUSD = monthIncome
     .filter((item) => item.type === "recurrent")
-    .reduce((acc, item) => acc + toUSD(item.amount, item.currency), 0);
+    .reduce((acc, item) => acc + toUSD(item.amount, item.currency, rates), 0);
   const oneTimeIncomeUSD = monthIncome
     .filter((item) => item.type === "one_time")
-    .reduce((acc, item) => acc + toUSD(item.amount, item.currency), 0);
+    .reduce((acc, item) => acc + toUSD(item.amount, item.currency, rates), 0);
   const totalIncomeUSD = recurringIncomeUSD + oneTimeIncomeUSD;
 
-  const totalExpensesUSD = monthExpenses.reduce((acc, item) => acc + toUSD(item.amount, item.currency), 0);
+  const totalExpensesUSD = monthExpenses.reduce(
+    (acc, item) => acc + toUSD(item.amount, item.currency, rates),
+    0,
+  );
   const totalEmployeeCostsUSD = monthEmployeeCosts.reduce(
-    (acc, item) => acc + toUSD(item.amount, item.currency),
+    (acc, item) => acc + toUSD(item.amount, item.currency, rates),
     0,
   );
 

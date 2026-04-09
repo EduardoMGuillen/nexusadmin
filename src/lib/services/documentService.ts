@@ -1,10 +1,10 @@
 import autoTable from "jspdf-autotable";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
-import { formatMoney, toUSD, fromUSD } from "@/lib/services/kpiService";
+import { DEFAULT_FX_RATES, formatMoney, toUSD, fromUSD, type FxRates } from "@/lib/services/kpiService";
 import type { BusinessDocument } from "@/lib/types";
 
-export function exportDocumentPdf(document: BusinessDocument) {
+export function exportDocumentPdf(document: BusinessDocument, rates: FxRates = DEFAULT_FX_RATES) {
   const pdf = new jsPDF();
   pdf.setFontSize(18);
   pdf.text(`Nexus Global - ${document.type === "contract" ? "Contrato" : "Cotizacion"}`, 14, 16);
@@ -14,8 +14,8 @@ export function exportDocumentPdf(document: BusinessDocument) {
   pdf.text(`Web: ${document.websiteUrl}`, 14, 36);
 
   const body = document.items.map((item) => {
-    const lineUSD = toUSD(item.unitPrice * item.qty, item.currency);
-    const converted = fromUSD(lineUSD, document.currency);
+    const lineUSD = toUSD(item.unitPrice * item.qty, item.currency, rates);
+    const converted = fromUSD(lineUSD, document.currency, rates);
     return [
       item.serviceName,
       String(item.qty),

@@ -136,6 +136,11 @@ button {
   align-items: center;
 }
 
+.fx-info {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .file-label {
   display: inline-flex;
   align-items: center;
@@ -180,6 +185,10 @@ button {
 
 .card h3 {
   margin-top: 0;
+}
+
+.dashboard-toolbar {
+  margin-bottom: 10px;
 }
 
 .two-cols {

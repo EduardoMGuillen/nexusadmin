@@ -4,7 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { IncomeSplitChart } from "@/components/charts/IncomeSplitChart";
 import { MonthlyTrendChart } from "@/components/charts/MonthlyTrendChart";
 import { exportDocumentPdf } from "@/lib/services/documentService";
-import { formatMoney, fromUSD, getKpis, getMonthKey, toUSD } from "@/lib/services/kpiService";
+import {
+  DEFAULT_FX_RATES,
+  formatMoney,
+  fromUSD,
+  getKpis,
+  getMonthKey,
+  toUSD,
+  type FxRates,
+} from "@/lib/services/kpiService";
 import { getAllData, removeItem, upsertItem } from "@/lib/repositories/financeRepo";
 import type {
   BusinessDocument,
@@ -72,6 +80,9 @@ export default function HomePage() {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [loading, setLoading] = useState(true);
   const [runtimeError, setRuntimeError] = useState("");
+  const [fxRates, setFxRates] = useState<FxRates>(DEFAULT_FX_RATES);
+  const [fxSource, setFxSource] = useState("fallback");
+  const [dashboardCurrency, setDashboardCurrency] = useState<Currency>("USD");
   const [state, setState] = useState<AppState>(defaultState);
 
   const [login, setLogin] = useState({ user: "", pass: "", error: "" });
@@ -150,9 +161,21 @@ export default function HomePage() {
         expenseEntries: state.expenseEntries,
         employeeCosts: state.employeeCosts,
         monthKey: currentMonthKey,
+        rates: fxRates,
       }),
-    [state.employeeCosts, state.expenseEntries, state.incomeEntries, currentMonthKey],
+    [state.employeeCosts, state.expenseEntries, state.incomeEntries, currentMonthKey, fxRates],
   );
+  const kpisInDashboardCurrency = useMemo(() => {
+    const recurring = fromUSD(kpis.recurringIncomeUSD, dashboardCurrency, fxRates);
+    const oneTime = fromUSD(kpis.oneTimeIncomeUSD, dashboardCurrency, fxRates);
+    const costs = fromUSD(
+      kpis.totalExpensesUSD + kpis.totalEmployeeCostsUSD,
+      dashboardCurrency,
+      fxRates,
+    );
+    const net = fromUSD(kpis.netProfitUSD, dashboardCurrency, fxRates);
+    return { recurring, oneTime, costs, net };
+  }, [dashboardCurrency, fxRates, kpis]);
 
   const monthlyTrend = useMemo(() => {
     const months = new Set<string>();
@@ -168,6 +191,7 @@ export default function HomePage() {
           expenseEntries: state.expenseEntries,
           employeeCosts: state.employeeCosts,
           monthKey: key,
+          rates: fxRates,
         });
         return {
           month: toMonthLabel(key),
@@ -176,7 +200,7 @@ export default function HomePage() {
           profit: Number(monthKpis.netProfitUSD.toFixed(2)),
         };
       });
-  }, [state.employeeCosts, state.expenseEntries, state.incomeEntries]);
+  }, [state.employeeCosts, state.expenseEntries, state.incomeEntries, fxRates]);
 
   const loadData = useCallback(async () => {
     try {
@@ -195,6 +219,20 @@ export default function HomePage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadData();
+    void (async () => {
+      try {
+        const response = await fetch("/api/fx-rates", { cache: "no-store" });
+        if (!response.ok) return;
+        const payload = (await response.json()) as {
+          ratesToUSD?: FxRates;
+          source?: string;
+        };
+        if (payload.ratesToUSD) setFxRates(payload.ratesToUSD);
+        if (payload.source) setFxSource(payload.source);
+      } catch {
+        // Keep defaults when provider is unavailable.
+      }
+    })();
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
@@ -324,8 +362,11 @@ export default function HomePage() {
       unitPrice: service.basePrice,
       currency: service.currency,
     }));
-    const totalUSD = items.reduce((acc, item) => acc + toUSD(item.unitPrice * item.qty, item.currency), 0);
-    const total = fromUSD(totalUSD, docDraft.currency);
+    const totalUSD = items.reduce(
+      (acc, item) => acc + toUSD(item.unitPrice * item.qty, item.currency, fxRates),
+      0,
+    );
+    const total = fromUSD(totalUSD, docDraft.currency, fxRates);
 
     const value: BusinessDocument = {
       id: crypto.randomUUID(),
@@ -458,6 +499,9 @@ export default function HomePage() {
           <button onClick={toggleTheme} className="ghost" type="button">
             {theme === "dark" ? "Claro" : "Oscuro"}
           </button>
+          <span className="fx-info">
+            FX: 1 USD = {(1 / fxRates.HNL).toFixed(2)} HNL | 1 EUR = {toUSD(1, "EUR", fxRates).toFixed(4)} USD ({fxSource})
+          </span>
           <button onClick={() => window.location.reload()} className="ghost" type="button">
             Refrescar
           </button>
@@ -496,23 +540,36 @@ export default function HomePage() {
 
       {tab === "dashboard" ? (
         <>
+          <section className="card dashboard-toolbar">
+            <div className="row">
+              <strong>Moneda del dashboard</strong>
+              <select
+                value={dashboardCurrency}
+                onChange={(e) => setDashboardCurrency(e.target.value as Currency)}
+              >
+                <option value="USD">USD</option>
+                <option value="HNL">HNL</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+          </section>
           <section className="kpi-grid">
             <article className="card">
               <h3>Ingreso recurrente</h3>
-              <p>{formatMoney(kpis.recurringIncomeUSD, "USD")}</p>
+              <p>{formatMoney(kpisInDashboardCurrency.recurring, dashboardCurrency)}</p>
             </article>
             <article className="card">
               <h3>Ingreso one-time</h3>
-              <p>{formatMoney(kpis.oneTimeIncomeUSD, "USD")}</p>
+              <p>{formatMoney(kpisInDashboardCurrency.oneTime, dashboardCurrency)}</p>
             </article>
             <article className="card">
               <h3>Costos operativos</h3>
-              <p>{formatMoney(kpis.totalExpensesUSD + kpis.totalEmployeeCostsUSD, "USD")}</p>
+              <p>{formatMoney(kpisInDashboardCurrency.costs, dashboardCurrency)}</p>
             </article>
             <article className="card">
               <h3>Utilidad neta</h3>
               <p className={kpis.netProfitUSD >= 0 ? "ok-text" : "danger-text"}>
-                {formatMoney(kpis.netProfitUSD, "USD")} ({kpis.marginPct.toFixed(1)}%)
+                {formatMoney(kpisInDashboardCurrency.net, dashboardCurrency)} ({kpis.marginPct.toFixed(1)}%)
               </p>
             </article>
           </section>
@@ -679,7 +736,7 @@ export default function HomePage() {
                   <td>{item.clientName}</td>
                   <td>{formatMoney(item.total, item.currency)}</td>
                   <td className="row">
-                    <button type="button" className="ghost" onClick={() => exportDocumentPdf(item)}>PDF</button>
+                    <button type="button" className="ghost" onClick={() => exportDocumentPdf(item, fxRates)}>PDF</button>
                     <button type="button" className="ghost danger" onClick={() => void remove("documents", item.id)}>Eliminar</button>
                   </td>
                 </tr>
