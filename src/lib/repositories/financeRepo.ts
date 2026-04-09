@@ -178,14 +178,23 @@ function saveFallback(store: FallbackStore) {
   localStorage.setItem(FALLBACK_KEY, JSON.stringify(store));
 }
 
+function isLocalRuntime() {
+  if (typeof window === "undefined") return false;
+  return ["localhost", "127.0.0.1"].includes(window.location.hostname);
+}
+
 export async function getAllData() {
   try {
     const response = await fetch("/api/data", { cache: "no-store" });
-    if (!response.ok) throw new Error("remote-failed");
+    if (!response.ok) {
+      const payload = await response.text();
+      throw new Error(`remote-failed:getAllData:${response.status}:${payload}`);
+    }
     const data = (await response.json()) as Partial<FallbackStore>;
     return sanitizeStore(data);
-  } catch {
-    return sanitizeStore(loadFallback());
+  } catch (error) {
+    if (isLocalRuntime()) return sanitizeStore(loadFallback());
+    throw error;
   }
 }
 
@@ -199,8 +208,12 @@ export async function upsertItem<T extends { id: string }>(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(value),
     });
-    if (!response.ok) throw new Error("remote-failed");
-  } catch {
+    if (!response.ok) {
+      const payload = await response.text();
+      throw new Error(`remote-failed:upsert:${collectionName}:${response.status}:${payload}`);
+    }
+  } catch (error) {
+    if (!isLocalRuntime()) throw error;
     const store = loadFallback();
     const list = [...((store[collectionName] as unknown) as T[])];
     const idx = list.findIndex((item) => item.id === value.id);
@@ -221,8 +234,12 @@ export async function removeItem(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    if (!response.ok) throw new Error("remote-failed");
-  } catch {
+    if (!response.ok) {
+      const payload = await response.text();
+      throw new Error(`remote-failed:remove:${collectionName}:${response.status}:${payload}`);
+    }
+  } catch (error) {
+    if (!isLocalRuntime()) throw error;
     const store = loadFallback();
     const next = (store[collectionName] as { id: string }[]).filter((item) => item.id !== id);
     (store[collectionName] as { id: string }[]) = next;
@@ -237,8 +254,12 @@ export async function saveBusinessProfile(profile: BusinessProfile) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(profile),
     });
-    if (!response.ok) throw new Error("remote-failed");
-  } catch {
+    if (!response.ok) {
+      const payload = await response.text();
+      throw new Error(`remote-failed:profile:${response.status}:${payload}`);
+    }
+  } catch (error) {
+    if (!isLocalRuntime()) throw error;
     const store = loadFallback();
     store.businessProfile = profile;
     saveFallback(store);

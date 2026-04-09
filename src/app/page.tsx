@@ -71,6 +71,7 @@ export default function HomePage() {
   const [monthKey, setMonthKey] = useState(getMonthKey());
   const [tab, setTab] = useState<Tab>("dashboard");
   const [loading, setLoading] = useState(true);
+  const [runtimeError, setRuntimeError] = useState("");
   const [state, setState] = useState<AppState>(defaultState);
 
   const [login, setLogin] = useState({ user: "", pass: "", error: "" });
@@ -126,6 +127,22 @@ export default function HomePage() {
     () => state.employeeCosts.filter((item) => item.monthKey === currentMonthKey),
     [currentMonthKey, state.employeeCosts],
   );
+  const incomeRows = useMemo(
+    () => [...state.incomeEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [state.incomeEntries],
+  );
+  const expenseRows = useMemo(
+    () => [...state.expenseEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [state.expenseEntries],
+  );
+  const employeeRows = useMemo(
+    () => [...state.employeeCosts].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [state.employeeCosts],
+  );
+  const documentRows = useMemo(
+    () => [...state.documents].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [state.documents],
+  );
   const kpis = useMemo(
     () =>
       getKpis({
@@ -164,9 +181,11 @@ export default function HomePage() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
+      setRuntimeError("");
       const data = await getAllData();
       setState(data);
-    } catch {
+    } catch (error) {
+      setRuntimeError(error instanceof Error ? error.message : "Error cargando datos.");
       setState(defaultState);
     } finally {
       setLoading(false);
@@ -220,9 +239,14 @@ export default function HomePage() {
       ...incomeDraft,
       amount,
     };
-    await upsertItem("incomeEntries", value);
-    await loadData();
-    setIncomeDraft((prev) => ({ ...prev, clientName: "", serviceName: "", amount: "" }));
+    try {
+      await upsertItem("incomeEntries", value);
+      await loadData();
+      setIncomeDraft((prev) => ({ ...prev, clientName: "", serviceName: "", amount: "" }));
+      setRuntimeError("");
+    } catch (error) {
+      setRuntimeError(error instanceof Error ? error.message : "Error guardando ingreso.");
+    }
   }
 
   async function addExpense(e: React.FormEvent) {
@@ -237,9 +261,14 @@ export default function HomePage() {
       ...expenseDraft,
       amount,
     };
-    await upsertItem("expenseEntries", value);
-    await loadData();
-    setExpenseDraft((prev) => ({ ...prev, title: "", vendor: "", amount: "" }));
+    try {
+      await upsertItem("expenseEntries", value);
+      await loadData();
+      setExpenseDraft((prev) => ({ ...prev, title: "", vendor: "", amount: "" }));
+      setRuntimeError("");
+    } catch (error) {
+      setRuntimeError(error instanceof Error ? error.message : "Error guardando gasto.");
+    }
   }
 
   async function addEmployeeCost(e: React.FormEvent) {
@@ -254,9 +283,14 @@ export default function HomePage() {
       ...employeeDraft,
       amount,
     };
-    await upsertItem("employeeCosts", value);
-    await loadData();
-    setEmployeeDraft((prev) => ({ ...prev, collaborator: "", role: "", amount: "" }));
+    try {
+      await upsertItem("employeeCosts", value);
+      await loadData();
+      setEmployeeDraft((prev) => ({ ...prev, collaborator: "", role: "", amount: "" }));
+      setRuntimeError("");
+    } catch (error) {
+      setRuntimeError(error instanceof Error ? error.message : "Error guardando costo de colaborador.");
+    }
   }
 
   async function addService(e: React.FormEvent) {
@@ -270,9 +304,14 @@ export default function HomePage() {
       ...serviceDraft,
       basePrice,
     };
-    await upsertItem("services", value);
-    await loadData();
-    setServiceDraft((prev) => ({ ...prev, name: "", basePrice: "" }));
+    try {
+      await upsertItem("services", value);
+      await loadData();
+      setServiceDraft((prev) => ({ ...prev, name: "", basePrice: "" }));
+      setRuntimeError("");
+    } catch (error) {
+      setRuntimeError(error instanceof Error ? error.message : "Error guardando servicio.");
+    }
   }
 
   async function addDocument(e: React.FormEvent) {
@@ -301,9 +340,14 @@ export default function HomePage() {
       notes: docDraft.notes,
       websiteUrl: state.businessProfile.websiteUrl,
     };
-    await upsertItem("documents", value);
-    await loadData();
-    setDocDraft((prev) => ({ ...prev, clientName: "", notes: "", serviceIds: [] }));
+    try {
+      await upsertItem("documents", value);
+      await loadData();
+      setDocDraft((prev) => ({ ...prev, clientName: "", notes: "", serviceIds: [] }));
+      setRuntimeError("");
+    } catch (error) {
+      setRuntimeError(error instanceof Error ? error.message : "Error guardando documento.");
+    }
   }
 
   function toggleServiceSelection(id: string) {
@@ -316,8 +360,13 @@ export default function HomePage() {
   }
 
   async function remove(collection: "incomeEntries" | "expenseEntries" | "employeeCosts" | "services" | "documents", id: string) {
-    await removeItem(collection, id);
-    await loadData();
+    try {
+      await removeItem(collection, id);
+      await loadData();
+      setRuntimeError("");
+    } catch (error) {
+      setRuntimeError(error instanceof Error ? error.message : "Error eliminando registro.");
+    }
   }
 
   function exportBackup() {
@@ -433,6 +482,16 @@ export default function HomePage() {
         )}
       </nav>
 
+      {runtimeError ? (
+        <div className="card">
+          <h3>Error de conexion de datos</h3>
+          <p className="danger-text">{runtimeError}</p>
+          <p>
+            Revisa <code>/api/health/db</code> en produccion para validar DB/variables.
+          </p>
+        </div>
+      ) : null}
+
       {loading ? <p>Cargando datos...</p> : null}
 
       {tab === "dashboard" ? (
@@ -483,11 +542,11 @@ export default function HomePage() {
             <button type="submit">Agregar</button>
           </form>
           <table>
-            <thead><tr><th>Cliente</th><th>Servicio</th><th>Monto</th><th>Tipo</th><th></th></tr></thead>
+            <thead><tr><th>Mes</th><th>Cliente</th><th>Servicio</th><th>Monto</th><th>Tipo</th><th></th></tr></thead>
             <tbody>
-              {monthIncome.map((item) => (
+              {incomeRows.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.clientName}</td><td>{item.serviceName}</td><td>{formatMoney(item.amount, item.currency)}</td><td>{item.type}</td>
+                  <td>{item.monthKey}</td><td>{item.clientName}</td><td>{item.serviceName}</td><td>{formatMoney(item.amount, item.currency)}</td><td>{item.type}</td>
                   <td><button type="button" className="ghost danger" onClick={() => void remove("incomeEntries", item.id)}>Eliminar</button></td>
                 </tr>
               ))}
@@ -515,11 +574,11 @@ export default function HomePage() {
             <button type="submit">Agregar</button>
           </form>
           <table>
-            <thead><tr><th>Concepto</th><th>Monto</th><th>Tipo</th><th></th></tr></thead>
+            <thead><tr><th>Mes</th><th>Concepto</th><th>Monto</th><th>Tipo</th><th></th></tr></thead>
             <tbody>
-              {monthExpenses.map((item) => (
+              {expenseRows.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.title}</td><td>{formatMoney(item.amount, item.currency)}</td><td>{item.type}</td>
+                  <td>{item.monthKey}</td><td>{item.title}</td><td>{formatMoney(item.amount, item.currency)}</td><td>{item.type}</td>
                   <td><button type="button" className="ghost danger" onClick={() => void remove("expenseEntries", item.id)}>Eliminar</button></td>
                 </tr>
               ))}
@@ -544,11 +603,11 @@ export default function HomePage() {
             <button type="submit">Agregar</button>
           </form>
           <table>
-            <thead><tr><th>Colaborador</th><th>Costo</th><th>Tipo</th><th></th></tr></thead>
+            <thead><tr><th>Mes</th><th>Colaborador</th><th>Costo</th><th>Tipo</th><th></th></tr></thead>
             <tbody>
-              {monthEmployeeCosts.map((item) => (
+              {employeeRows.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.collaborator}</td><td>{formatMoney(item.amount, item.currency)}</td><td>{item.costType}</td>
+                  <td>{item.monthKey}</td><td>{item.collaborator}</td><td>{formatMoney(item.amount, item.currency)}</td><td>{item.costType}</td>
                   <td><button type="button" className="ghost danger" onClick={() => void remove("employeeCosts", item.id)}>Eliminar</button></td>
                 </tr>
               ))}
@@ -612,11 +671,11 @@ export default function HomePage() {
             ))}
           </div>
           <table>
-            <thead><tr><th>Tipo</th><th>Cliente</th><th>Total</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Mes</th><th>Tipo</th><th>Cliente</th><th>Total</th><th>Acciones</th></tr></thead>
             <tbody>
-              {state.documents.filter((item) => item.monthKey === currentMonthKey).map((item) => (
+              {documentRows.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.type === "contract" ? "Contrato" : "Cotizacion"}</td>
+                  <td>{item.monthKey}</td><td>{item.type === "contract" ? "Contrato" : "Cotizacion"}</td>
                   <td>{item.clientName}</td>
                   <td>{formatMoney(item.total, item.currency)}</td>
                   <td className="row">
